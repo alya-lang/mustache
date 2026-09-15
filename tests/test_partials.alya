@@ -1,0 +1,69 @@
+# Test suite for mustache - Partials & Comments
+import "std/test"
+import "../src/lib.alya" as mustache
+
+function main()
+    test_suite("Mustache - Partials & Comments")
+    let r = runner_new()
+
+    let ot = "{{"
+    let ct = "}}"
+
+    # 1. Comments {{! comment }} are ignored
+    let t1 = "Before" + ot + "! This is a comment that should not show up" + ct + "After"
+    let res1 = mustache::render(t1, {})
+    runner_assert_str_eq(r, res1, "BeforeAfter", "Comment produces no output")
+
+    # 2. Simple partial inclusion
+    let t2 = "Header: " + ot + ">greeting" + ct
+    let p2 = {
+        "greeting": "Hello from partial!"
+    }
+    let res2 = mustache::render(t2, {}, p2)
+    runner_assert_str_eq(r, res2, "Header: Hello from partial!", "Simple partial inclusion")
+
+    # 3. Partial inherits calling context
+    let t3 = "User: " + ot + ">user_badge" + ct
+    let p3 = {
+        "user_badge": "[" + ot + "name" + ct + " - " + ot + "role" + ct + "]"
+    }
+    let d3 = { "name": "Margaret Hamilton", "role": "Software Engineer" }
+    let res3 = mustache::render(t3, d3, p3)
+    runner_assert_str_eq(r, res3, "User: [Margaret Hamilton - Software Engineer]", "Partial inherits calling context")
+
+    # 4. Partial inside a section loop
+    let t4 = "Roster:\n" + ot + "#team" + ct + ot + ">member" + ct + "\n" + ot + "/team" + ct
+    let p4 = {
+        "member": " - " + ot + "name" + ct + " (" + ot + "skill" + ct + ")"
+    }
+    let d4 = {
+        "team": [
+            { "name": "Alan", "skill": "Turing Machines" },
+            { "name": "Claude", "skill": "Information Theory" }
+        ]
+    }
+    let res4 = mustache::render(t4, d4, p4)
+    let expected4 = "Roster:\n - Alan (Turing Machines)\n - Claude (Information Theory)\n"
+    runner_assert_str_eq(r, res4, expected4, "Partial rendered within section loop")
+
+    # 5. Missing partial gracefully outputs nothing
+    let t5 = "Start" + ot + ">nonexistent_partial" + ct + "End"
+    let res5 = mustache::render(t5, {}, {})
+    runner_assert_str_eq(r, res5, "StartEnd", "Missing partial outputs nothing")
+
+    # 6. Precompiled template used as partial
+    let p_compiled = mustache::compile("Precompiled: " + ot + "data_val" + ct)
+    let t6 = ot + ">compiled_partial" + ct
+    let p6 = {
+        "compiled_partial": p_compiled
+    }
+    let res6 = mustache::render(t6, { "data_val": "Fast" }, p6)
+    runner_assert_str_eq(r, res6, "Precompiled: Fast", "Precompiled template partial")
+
+    let failed = runner_summary(r)
+    if failed > 0
+        exit(1)
+    end
+end
+
+main()

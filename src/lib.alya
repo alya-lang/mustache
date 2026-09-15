@@ -1,14 +1,30 @@
-# mustache library
+# Mustache Template Engine - Public API Facade
 # Part of the Alya Language package ecosystem (https://github.com/alya-lang)
 
 import "./types.alya"
-import "./core/formatter.alya"
+import "./escape.alya"
+import "./context.alya"
+import "./parser.alya"
+import "./renderer.alya"
 
-# Public facade functions
-function hello(name = "World")
-    return core_format_greeting(name)
+# Compiles a Mustache template string into an AST Template
+function compile(template_str)
+    return mustache_parse(template_str)
 end
 
-function new_config(name = "World", count = 1)
-    return make_config(name, count)
+# Renders a compiled Template AST with data and optional partials
+function render_template(compiled_template, data, partials = {})
+    return mustache_render_template(compiled_template, data, partials)
+end
+
+# Renders a template string with data and optional partials
+function render(template_str, data, partials = {})
+    let compiled = mustache_parse(template_str)
+    return mustache_render_template(compiled, data, partials)
+end
+
+# Reads a template file from disk and renders it with data and optional partials
+function render_file(file_path, data, partials = {})
+    let content = read_file(file_path)
+    return render(content, data, partials)
 end

@@ -1,0 +1,69 @@
+# Mustache Template Engine - HTML Escaping & Sanitization
+# Part of the Alya Language package ecosystem (https://github.com/alya-lang)
+
+# Escapes special characters for HTML/XML output
+function escape_html(text)
+    let s = str(text)
+    let slen = len(s)
+    if slen == 0
+        return ""
+    end
+    let res = ""
+    let i = 0
+    while i < slen
+        let ch = char_at(s, i)
+        if ch == "&"
+            res += "&amp;"
+        elif ch == "<"
+            res += "&lt;"
+        elif ch == ">"
+            res += "&gt;"
+        elif ch == "\""
+            res += "&quot;"
+        elif ch == "'"
+            res += "&#39;"
+        else
+            res += ch
+        end
+        i += 1
+    end
+    return res
+end
+
+# Unescapes standard HTML entities back to raw characters
+function unescape_html(text)
+    let s = str(text)
+    let slen = len(s)
+    if slen == 0
+        return ""
+    end
+    let res = ""
+    let i = 0
+    while i < slen
+        let ch = char_at(s, i)
+        if ch == "&"
+            if i + 4 < slen and substring(s, i, 5) == "&amp;"
+                res += "&"
+                i += 4
+            elif i + 3 < slen and substring(s, i, 4) == "&lt;"
+                res += "<"
+                i += 3
+            elif i + 3 < slen and substring(s, i, 4) == "&gt;"
+                res += ">"
+                i += 3
+            elif i + 5 < slen and substring(s, i, 6) == "&quot;"
+                res += "\""
+                i += 5
+            elif i + 4 < slen and substring(s, i, 5) == "&#39;"
+                res += "'"
+                i += 4
+            else
+                res += ch
+            end
+        else
+            res += ch
+        end
+        i += 1
+    end
+    return res
+end

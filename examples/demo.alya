@@ -1,15 +1,53 @@
-# Example usage of mustache
-import "../src/lib.alya" as pkg
+# Example usage of mustache template engine
+import "../src/lib.alya" as mustache
 
 function main()
-    # Basic greeting
-    let msg = pkg::hello("Alya Developer")
-    say msg
+    let ot = "{{"
+    let ct = "}}"
+    let oraw = "{{{"
+    let craw = "}}}"
 
-    # Using configuration struct
-    let cfg = pkg::new_config("Modular Architecture", 5)
-    say "Target: " + cfg.name
-    say "Formatted: " + pkg::core_format_custom(cfg)
+    # Template definition
+    let tmpl = ot + ">header" + ct + "\n"
+    tmpl += "Welcome back, " + ot + "user.name" + ct + "!\n\n"
+    tmpl += "Your Shopping Cart:\n"
+    tmpl += ot + "#items" + ct
+    tmpl += " - " + ot + "title" + ct + ": $" + ot + "price" + ct + " (Qty: " + ot + "qty" + ct + ")\n"
+    tmpl += ot + "/items" + ct
+    tmpl += ot + "^items" + ct
+    tmpl += " Your cart is empty.\n"
+    tmpl += ot + "/items" + ct
+    tmpl += "\n"
+    tmpl += ot + "#vip_discount" + ct
+    tmpl += "VIP Status Active: You get an extra 10% off!\n"
+    tmpl += ot + "/vip_discount" + ct
+    tmpl += "\nSpecial Note: " + oraw + "announcement_html" + craw + "\n"
+    tmpl += ot + ">footer" + ct
+
+    # Partials definition
+    let partials = {
+        "header": "========================================\n           ACME E-COMMERCE STORE        \n========================================",
+        "footer": "========================================\n Thank you for shopping with us!        \n========================================"
+    }
+
+    # Data context
+    let data = {
+        "user": {
+            "name": "Jane Doe",
+            "tier": "Gold"
+        },
+        "items": [
+            { "title": "Mechanical Keyboard", "price": 120, "qty": 1 },
+            { "title": "Wireless Mouse", "price": 45, "qty": 2 },
+            { "title": "Desk Mat", "price": 25, "qty": 1 }
+        ],
+        "vip_discount": 1,
+        "announcement_html": "Enjoy <b>Free Shipping</b> on orders over $50!"
+    }
+
+    # Render template
+    let rendered = mustache::render(tmpl, data, partials)
+    say rendered
 end
 
 main()

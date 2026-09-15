@@ -1,0 +1,40 @@
+# Test suite for mustache - HTML Escaping & Unescaping
+import "std/test"
+import "../src/escape.alya" as escape
+
+function main()
+    test_suite("Mustache - HTML Escaping & Unescaping")
+    let r = runner_new()
+
+    # 1. escape_html on ampersand
+    runner_assert_str_eq(r, escape::escape_html("Fish & Chips"), "Fish &amp; Chips", "Escapes ampersand")
+
+    # 2. escape_html on angle brackets
+    runner_assert_str_eq(r, escape::escape_html("<div>hello</div>"), "&lt;div&gt;hello&lt;/div&gt;", "Escapes < and >")
+
+    # 3. escape_html on quotes
+    runner_assert_str_eq(r, escape::escape_html("\"double\" & 'single'"), "&quot;double&quot; &amp; &#39;single&#39;", "Escapes double and single quotes")
+
+    # 4. escape_html on string with no special chars
+    runner_assert_str_eq(r, escape::escape_html("Plain text 123"), "Plain text 123", "Leaves normal characters untouched")
+
+    # 5. escape_html on empty string
+    runner_assert_str_eq(r, escape::escape_html(""), "", "Handles empty string")
+
+    # 6. unescape_html on standard entities
+    let escaped = "&lt;b&gt;bold&lt;/b&gt; &amp; &quot;quote&quot; &amp; &#39;single&#39;"
+    let expected = "<b>bold</b> & \"quote\" & 'single'"
+    runner_assert_str_eq(r, escape::unescape_html(escaped), expected, "Unescapes all standard HTML entities")
+
+    # 7. Round trip escape -> unescape
+    let original = "<header class=\"nav\">Items & 'specials' > 10</header>"
+    let roundtrip = escape::unescape_html(escape::escape_html(original))
+    runner_assert_str_eq(r, roundtrip, original, "Escape and unescape roundtrip")
+
+    let failed = runner_summary(r)
+    if failed > 0
+        exit(1)
+    end
+end
+
+main()

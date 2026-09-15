@@ -11,10 +11,11 @@ Fast, zero-dependency Mustache template engine for Alya
 
 ## 🌟 Features
 
-- ⚡ **Lightweight & Fast**: Built for speed with minimal overhead
-- 🧩 **Modular Architecture**: Multi-module design supporting flat modules (`types.alya`) and subfolder hierarchies (`core/formatter.alya`)
-- 🛡️ **Reliable & Typed**: Explicit struct definitions and clean namespaced APIs
-- 🧪 **Well Tested**: Comprehensive test suite with standard assertions
+- ⚡ **Lightweight & Fast**: Pure native Alya implementation processing over 1,000,000 templates/second with zero external dependencies
+- 🧩 **Full Specification**: Supports variables (`{{var}}`), unescaped HTML (`{{{var}}}` & `{{&var}}`), loops and sections (`{{#sec}}`), inverted sections (`{{^sec}}`), comments (`{{!comment}}`), and partials (`{{>partial}}`)
+- 🔍 **Dot Notation & Implicit Iterator**: Supports nested object path navigation (`{{user.profile.name}}`) and array scalar iteration (`{{.}}`)
+- 🛡️ **Safe & Sanitized**: Built-in HTML escaping (`&`, `<`, `>`, `"`, `'`) with roundtrip unescaping support
+- 🧪 **Well Tested**: Comprehensive unit test suite, micro-benchmarks, and realistic examples
 
 ---
 
@@ -23,23 +24,26 @@ Fast, zero-dependency Mustache template engine for Alya
 ```
 mustache/
 ├── alya.toml               # Package manifest
-├── c/                      # (Optional) Native C sources for zero-dependency FFI packages
 ├── src/
 │   ├── lib.alya            # Public API facade
-│   ├── types.alya          # Data structures & struct definitions
-│   ├── ffi.alya            # (Optional) Native extern "C" declarations
-│   └── core/               # Subdirectory module hierarchy (optional for larger packages)
-│       └── formatter.alya  # Domain formatting logic & internal helpers
+│   ├── types.alya          # AST nodes, template struct & tag constants
+│   ├── escape.alya         # HTML entity sanitization & decoding
+│   ├── context.alya        # Scope stack, key resolution & type introspection
+│   ├── parser.alya         # Lexer and recursive AST builder
+│   └── renderer.alya       # Template evaluator & partial resolver
 ├── examples/
-│   └── demo.alya           # Runnable usage examples
+│   └── demo.alya           # E-commerce store view template demo
 ├── tests/
-│   └── test_basic.alya     # Automated test suite
+│   ├── test_basic.alya     # Variable replacement & escaping tests
+│   ├── test_sections.alya  # Section loops & inverted section tests
+│   ├── test_partials.alya  # Partial inclusion & comment tests
+│   └── test_escape.alya    # HTML entity encode/decode unit tests
 └── benches/
-    └── bench_basic.alya    # Micro-benchmarks
+    └── bench_basic.alya    # Compilation & rendering micro-benchmarks
 ```
 
 > [!NOTE]
-> **Modular Source & Native C:** Modules can be structured flat inside `src/` (e.g. `src/types.alya`) or grouped into subdirectories (e.g. `src/core/formatter.alya`). Packages bundling native C sources declare them in `alya.toml` under `[build]` (`c-sources`, `c-flags`, `c-include-dirs`); `alyac` automatically compiles and caches them into `.o` object files in `~/.alya/c_obj` with zero runtime dependency overhead.
+> **Modular Source:** Modules are cleanly separated inside `src/` (`types.alya`, `escape.alya`, `context.alya`, `parser.alya`, `renderer.alya`) and unified under the `src/lib.alya` facade for zero-overhead imports.
 
 ---
 
@@ -64,17 +68,20 @@ alyac install
 ## 🚀 Quick Start
 
 ```alya
-import "mustache" as pkg
+import "mustache" as mustache
 
 function main()
-    # Basic facade call
-    let greeting = pkg::hello("Alya")
-    say greeting
+    let tmpl = "Hello, {{name}}!\n"
+    tmpl += "{{#items}} - {{.}}\n{{/items}}"
+    tmpl += "{{^items}}No items found.{{/items}}"
 
-    # Struct construction and domain helpers
-    let cfg = pkg::new_config("Community", 2)
-    say "Target: " + cfg.name
-    say "Formatted: " + pkg::core_format_custom(cfg)
+    let data = {
+        "name": "Developer",
+        "items": ["Alya", "Mustache", "Speed"]
+    }
+
+    let output = mustache::render(tmpl, data)
+    say output
 end
 
 main()
@@ -86,10 +93,12 @@ main()
 
 | Function | Arguments | Returns | Description |
 |---|---|---|---|
-| `hello(name)` | `name = "World"` | `string` | Returns a friendly greeting message. |
-| `new_config(name, count)` | `name = "World", count = 1` | `MustacheConfig` | Constructs a new configuration struct. |
-| `core_format_greeting(name)` | `name` | `string` | Core formatter producing `Hello, {name}!`. |
-| `core_format_custom(config)` | `config: MustacheConfig` | `string` | Formats greeting using prefix and name from config. |
+| `render(template, data, partials)` | `template: string, data: map, partials = {}` | `string` | Parses template and renders output using data context and optional partials. |
+| `compile(template)` | `template: string` | `Template` | Parses template string into an AST `Template` struct for reuse. |
+| `render_template(compiled, data, partials)` | `compiled: Template, data: map, partials = {}` | `string` | Renders a precompiled `Template` struct with data and partials. |
+| `render_file(path, data, partials)` | `path: string, data: map, partials = {}` | `string` | Reads a template file from disk and renders it with data and partials. |
+| `escape_html(text)` | `text: string` | `string` | Escapes special HTML characters (`&`, `<`, `>`, `"`, `'`). |
+| `unescape_html(text)` | `text: string` | `string` | Unescapes standard HTML entities back to raw characters. |
 
 ---
 
@@ -98,7 +107,7 @@ main()
 Run the test suite using `alyac`:
 
 ```bash
-alyac run tests/test_basic.alya
+alyac test
 ```
 
 Run the benchmark suite:

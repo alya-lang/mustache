@@ -1,28 +1,83 @@
-# Test suite for mustache
+# Test suite for mustache - Basic Variables & Escaping
 import "std/test"
-import "../src/lib.alya" as pkg
+import "std/fs"
+import "../src/lib.alya" as mustache
 
 function main()
-    test_suite("mustache Test Suite")
+    test_suite("Mustache - Basic Variables & Escaping")
     let r = runner_new()
 
-    # 1. Basic facade function
-    let res = pkg::hello("Alya")
-    runner_assert_str_eq(r, res, "Hello, Alya!", "pkg::hello returns formatted greeting")
+    let ot = "{{"
+    let ct = "}}"
+    let oraw = "{{{"
+    let craw = "}}}"
 
-    # 2. Default parameter
-    let default_res = pkg::hello()
-    runner_assert_str_eq(r, default_res, "Hello, World!", "pkg::hello() uses default name")
+    # 1. Simple variable replacement
+    let t1 = "Hello, " + ot + "name" + ct + "!"
+    let d1 = { "name": "World" }
+    let res1 = mustache::render(t1, d1)
+    runner_assert_str_eq(r, res1, "Hello, World!", "Simple variable interpolation")
 
-    # 3. Modular types & config constructor
-    let cfg = pkg::new_config("Community", 3)
-    runner_assert_str_eq(r, cfg.name, "Community", "pkg::new_config sets name correctly")
-    runner_assert_str_eq(r, cfg.prefix, "Hello", "pkg::new_config sets default prefix")
-    runner_assert_eq(r, cfg.count, 3, "pkg::new_config sets count correctly")
+    # 2. Missing variable renders empty string
+    let t2 = "Greeting: [" + ot + "missing" + ct + "]"
+    let d2 = { "existing": "yes" }
+    let res2 = mustache::render(t2, d2)
+    runner_assert_str_eq(r, res2, "Greeting: []", "Missing variable renders empty")
 
-    # 4. Core custom formatter using struct
-    let custom_res = pkg::core_format_custom(cfg)
-    runner_assert_str_eq(r, custom_res, "Hello, Community!", "pkg::core_format_custom formats using config")
+    # 3. HTML escaping
+    let t3 = ot + "html" + ct
+    let d3 = { "html": "<script>alert(\"xss\") & 'test'</script>" }
+    let res3 = mustache::render(t3, d3)
+    let expected3 = "&lt;script&gt;alert(&quot;xss&quot;) &amp; &#39;test&#39;&lt;/script&gt;"
+    runner_assert_str_eq(r, res3, expected3, "HTML characters are escaped by default")
+
+    # 4. Triple curly unescaped variable {{{var}}}
+    let t4 = oraw + "html" + craw
+    let res4 = mustache::render(t4, d3)
+    runner_assert_str_eq(r, res4, "<script>alert(\"xss\") & 'test'</script>", "Triple-mustache renders raw HTML")
+
+    # 5. Ampersand unescaped variable {{&var}}
+    let t5 = ot + "&html" + ct
+    let res5 = mustache::render(t5, d3)
+    runner_assert_str_eq(r, res5, "<script>alert(\"xss\") & 'test'</script>", "Ampersand tag {{&var}} renders raw HTML")
+
+    # 6. Numbers and integer interpolation
+    let t6 = "Count: " + ot + "count" + ct + ", Score: " + ot + "score" + ct
+    let d6 = { "count": 42, "score": 100 }
+    let res6 = mustache::render(t6, d6)
+    runner_assert_str_eq(r, res6, "Count: 42, Score: 100", "Integers rendered properly")
+
+    # 7. Whitespace inside tag is trimmed
+    let t7 = "User: " + ot + "   username   " + ct
+    let d7 = { "username": "alice" }
+    let res7 = mustache::render(t7, d7)
+    runner_assert_str_eq(r, res7, "User: alice", "Whitespace in tag trimmed")
+
+    # 8. Dot notation navigation
+    let t8 = ot + "user.profile.first_name" + ct + " " + ot + "user.profile.last_name" + ct
+    let d8 = {
+        "user": {
+            "profile": {
+                "first_name": "Ada",
+                "last_name": "Lovelace"
+            }
+        }
+    }
+    let res8 = mustache::render(t8, d8)
+    runner_assert_str_eq(r, res8, "Ada Lovelace", "Dot notation resolves nested maps")
+
+    # 9. Precompiled template execution
+    let compiled = mustache::compile(t1)
+    let res9 = mustache::render_template(compiled, { "name": "Alya Ecosystem" })
+    runner_assert_str_eq(r, res9, "Hello, Alya Ecosystem!", "Precompiled template renders correctly")
+
+    # 10. Render from file
+    let tmp_file = "test_temp_template.mustache"
+    let t_file_content = "File template: " + ot + "title" + ct
+    fs_write(tmp_file, t_file_content)
+    let res10 = mustache::render_file(tmp_file, { "title": "Engine" })
+    runner_assert_str_eq(r, res10, "File template: Engine", "render_file renders file content")
+    fs_remove(tmp_file)
 
     let failed = runner_summary(r)
     if failed > 0

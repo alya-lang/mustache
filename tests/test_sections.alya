@@ -1,0 +1,90 @@
+# Test suite for mustache - Sections & Inverted Sections
+import "std/test"
+import "../src/lib.alya" as mustache
+
+function main()
+    test_suite("Mustache - Sections & Inverted Sections")
+    let r = runner_new()
+
+    let ot = "{{"
+    let ct = "}}"
+
+    # 1. Truthy conditional section (boolean / non-zero integer)
+    let t1 = ot + "#is_active" + ct + "Active Account" + ot + "/is_active" + ct
+    let res1_true = mustache::render(t1, { "is_active": 1 })
+    runner_assert_str_eq(r, res1_true, "Active Account", "Truthy section renders when 1")
+
+    let res1_false = mustache::render(t1, { "is_active": 0 })
+    runner_assert_str_eq(r, res1_false, "", "Truthy section does not render when 0")
+
+    # 2. Empty array section (skipped)
+    let t2 = ot + "#items" + ct + "Has items" + ot + "/items" + ct
+    let res2 = mustache::render(t2, { "items": [] })
+    runner_assert_str_eq(r, res2, "", "Empty array section does not render")
+
+    # 3. Array iteration with implicit iterator {{.}}
+    let t3 = "List: " + ot + "#items" + ct + "[" + ot + "." + ct + "] " + ot + "/items" + ct
+    let d3 = { "items": ["apple", "banana", "cherry"] }
+    let res3 = mustache::render(t3, d3)
+    runner_assert_str_eq(r, res3, "List: [apple] [banana] [cherry] ", "Array iteration with implicit iterator")
+
+    # 4. Array iteration of objects/maps
+    let t4 = ot + "#people" + ct + ot + "name" + ct + "(" + ot + "role" + ct + "); " + ot + "/people" + ct
+    let d4 = {
+        "people": [
+            { "name": "Linus", "role": "Maintainer" },
+            { "name": "Guido", "role": "Author" }
+        ]
+    }
+    let res4 = mustache::render(t4, d4)
+    runner_assert_str_eq(r, res4, "Linus(Maintainer); Guido(Author); ", "Array of maps iteration")
+
+    # 5. Nested context scope resolution (accessing parent variable from inside loop)
+    let t5 = ot + "#items" + ct + ot + "category" + ct + ": " + ot + "title" + ct + "; " + ot + "/items" + ct
+    let d5 = {
+        "category": "Book",
+        "items": [
+            { "title": "The Hobbit" },
+            { "title": "Dune" }
+        ]
+    }
+    let res5 = mustache::render(t5, d5)
+    runner_assert_str_eq(r, res5, "Book: The Hobbit; Book: Dune; ", "Inner loop accesses outer parent variables")
+
+    # 6. Map / object section (pushes map onto context stack)
+    let t6 = ot + "#user" + ct + "Hello, " + ot + "name" + ct + "! Email: " + ot + "email" + ct + ot + "/user" + ct
+    let d6 = {
+        "user": {
+            "name": "Sarah",
+            "email": "sarah@example.com"
+        }
+    }
+    let res6 = mustache::render(t6, d6)
+    runner_assert_str_eq(r, res6, "Hello, Sarah! Email: sarah@example.com", "Map section promotes context")
+
+    # 7. Inverted section with empty list
+    let t7 = ot + "^items" + ct + "No items in cart." + ot + "/items" + ct
+    let res7_empty = mustache::render(t7, { "items": [] })
+    runner_assert_str_eq(r, res7_empty, "No items in cart.", "Inverted section renders on empty list")
+
+    let res7_nonempty = mustache::render(t7, { "items": [1] })
+    runner_assert_str_eq(r, res7_nonempty, "", "Inverted section hidden on non-empty list")
+
+    # 8. Inverted section with falsy or missing variable
+    let t8 = ot + "^flag" + ct + "Flag is false" + ot + "/flag" + ct
+    let res8_zero = mustache::render(t8, { "flag": 0 })
+    runner_assert_str_eq(r, res8_zero, "Flag is false", "Inverted section renders on 0")
+
+    let res8_missing = mustache::render(t8, {})
+    runner_assert_str_eq(r, res8_missing, "Flag is false", "Inverted section renders on missing key")
+
+    let res8_truthy = mustache::render(t8, { "flag": 1 })
+    runner_assert_str_eq(r, res8_truthy, "", "Inverted section hidden on truthy key")
+
+    let failed = runner_summary(r)
+    if failed > 0
+        exit(1)
+    end
+end
+
+main()

@@ -1,0 +1,106 @@
+# Mustache Template Engine - AST Parser
+# Part of the Alya Language package ecosystem (https://github.com/alya-lang)
+
+import "./types.alya"
+
+# Helper to find substring starting at a specific position
+function mustache_find_sub(s, sub, start_pos, slen)
+    let sublen = len(sub)
+    if sublen == 0
+        return start_pos
+    end
+    let max_idx = slen - sublen
+    let i = start_pos
+    while i <= max_idx
+        if substring(s, i, sublen) == sub
+            return i
+        end
+        i += 1
+    end
+    return -1
+end
+
+# Parses a Mustache template string into a Template AST
+function mustache_parse(source)
+    let slen = len(source)
+    let root = make_node(tag_section(), "root", [])
+    let section_stack = [root]
+    let pos = 0
+
+    while pos < slen
+        let open_idx = mustache_find_sub(source, "{{", pos, slen)
+        if open_idx == -1
+            let tail = substring(source, pos, slen - pos)
+            if len(tail) > 0
+                let cur_parent = section_stack[len(section_stack) - 1]
+                cur_parent.node_children.push(make_node(tag_text(), tail))
+            end
+            break
+        end
+
+        if open_idx > pos
+            let text = substring(source, pos, open_idx - pos)
+            let cur_parent = section_stack[len(section_stack) - 1]
+            cur_parent.node_children.push(make_node(tag_text(), text))
+        end
+
+        # Check for triple brace {{{
+        if open_idx + 2 < slen and char_at(source, open_idx + 2) == "{"
+            let close_idx = mustache_find_sub(source, "}}}", open_idx + 3, slen)
+            if close_idx == -1
+                let rest = substring(source, open_idx, slen - open_idx)
+                let cur_parent = section_stack[len(section_stack) - 1]
+                cur_parent.node_children.push(make_node(tag_text(), rest))
+                break
+            end
+            let raw_content = substring(source, open_idx + 3, close_idx - (open_idx + 3)).trim()
+            let cur_parent = section_stack[len(section_stack) - 1]
+            cur_parent.node_children.push(make_node(tag_raw_variable(), raw_content))
+            pos = close_idx + 3
+        else
+            let close_idx = mustache_find_sub(source, "}}", open_idx + 2, slen)
+            if close_idx == -1
+                let rest = substring(source, open_idx, slen - open_idx)
+                let cur_parent = section_stack[len(section_stack) - 1]
+                cur_parent.node_children.push(make_node(tag_text(), rest))
+                break
+            end
+            let raw_tag = substring(source, open_idx + 2, close_idx - (open_idx + 2)).trim()
+            let tlen = len(raw_tag)
+            if tlen > 0
+                let first_ch = char_at(raw_tag, 0)
+                let sub_tag = ""
+                if tlen > 1
+                    sub_tag = substring(raw_tag, 1, tlen - 1).trim()
+                end
+
+                let cur_parent = section_stack[len(section_stack) - 1]
+
+                if first_ch == "!"
+                    # Comment node - ignored in AST rendering
+                elif first_ch == "&"
+                    cur_parent.node_children.push(make_node(tag_raw_variable(), sub_tag))
+                elif first_ch == ">"
+                    cur_parent.node_children.push(make_node(tag_partial(), sub_tag))
+                elif first_ch == "#"
+                    let sec_node = make_node(tag_section(), sub_tag, [])
+                    cur_parent.node_children.push(sec_node)
+                    section_stack.push(sec_node)
+                elif first_ch == "^"
+                    let inv_node = make_node(tag_inverted(), sub_tag, [])
+                    cur_parent.node_children.push(inv_node)
+                    section_stack.push(inv_node)
+                elif first_ch == "/"
+                    if len(section_stack) > 1
+                        section_stack.pop()
+                    end
+                else
+                    cur_parent.node_children.push(make_node(tag_variable(), raw_tag))
+                end
+            end
+            pos = close_idx + 2
+        end
+    end
+
+    return make_template(root.node_children, source)
+end
