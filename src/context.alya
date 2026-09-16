@@ -4,8 +4,8 @@
 import "./types.alya"
 
 # Checks if a value is a valid heap pointer in 64-bit user address space
-function is_heap_pointer(v)
-    if v == null or v == 0
+pub function is_heap_pointer(v)
+    if v is null or v == 0
         return 0
     end
     # Range check for 64-bit user pointers: [65536, 0x00007fffffffffff]
@@ -16,7 +16,7 @@ function is_heap_pointer(v)
 end
 
 # Checks if a value is an Alya array
-function is_list(v)
+pub function is_list(v)
     if is_heap_pointer(v) == 0
         return 0
     end
@@ -25,7 +25,7 @@ function is_list(v)
 end
 
 # Checks if a value is an Alya map/hash
-function is_map_obj(v)
+pub function is_map_obj(v)
     if is_heap_pointer(v) == 0
         return 0
     end
@@ -36,8 +36,8 @@ end
 # Checks if a value is truthy according to Mustache rules:
 # - null, 0, false, empty string "", empty array [] are falsy (0)
 # - everything else (including empty map or non-empty string/array/number) is truthy (1)
-function is_truthy(v)
-    if v == null or v == 0
+pub function is_truthy(v)
+    if v is null or v == 0
         return 0
     end
     if is_list(v)
@@ -58,24 +58,15 @@ function is_truthy(v)
 end
 
 # Checks if a map contains a specified key
-function map_has_key(m, key)
+pub function map_has_key(m, key)
     if is_map_obj(m) == 0
         return 0
     end
-    let ks = keys(m)
-    let count = len(ks)
-    let i = 0
-    while i < count
-        if ks[i] == key
-            return 1
-        end
-        i += 1
-    end
-    return 0
+    return key in m
 end
 
 # Resolves a key (supports '.' for implicit iterator and dot-notation for nested paths) in a single scope
-function resolve_in_scope(scope, key)
+pub function resolve_in_scope(scope, key)
     if key == "."
         return make_lookup_result(1, scope)
     end
@@ -85,29 +76,25 @@ function resolve_in_scope(scope, key)
     if key.contains(".")
         let parts = key.split(".")
         let cur = scope
-        let count = len(parts)
-        let i = 0
-        while i < count
-            let part = parts[i]
+        for part in parts
             if is_map_obj(cur) == 0
                 return make_lookup_result(0, null)
             end
-            if map_has_key(cur, part) == 0
+            if part not in cur
                 return make_lookup_result(0, null)
             end
             cur = cur[part]
-            i += 1
         end
         return make_lookup_result(1, cur)
     end
-    if map_has_key(scope, key)
+    if key in scope
         return make_lookup_result(1, scope[key])
     end
     return make_lookup_result(0, null)
 end
 
 # Searches a context stack from top (most local scope) to bottom (global scope)
-function context_find(stack, key)
+pub function context_find(stack, key)
     let count = len(stack)
     if count == 0
         return make_lookup_result(0, null)
@@ -122,4 +109,24 @@ function context_find(stack, key)
         i -= 1
     end
     return make_lookup_result(0, null)
+end
+
+# Primary Struct Methods on MustacheContext
+pub function MustacheContext.push(self, scope)
+    self.ctx_stack.push(scope)
+    return self
+end
+
+pub function MustacheContext.pop(self)
+    return self.ctx_stack.pop()
+end
+
+pub function MustacheContext.find(self, key)
+    return context_find(self.ctx_stack, key)
+end
+
+pub function make_context(initial_scope = {})
+    return MustacheContext {
+        ctx_stack: [initial_scope]
+    }
 end

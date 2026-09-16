@@ -16,79 +16,74 @@ function is_struct_obj(v)
 end
 
 # Renders an AST node array against a context stack and partials map
-function mustache_render_nodes(nodes, stack, partials)
+pub function mustache_render_nodes(nodes, stack, partials)
     let res = ""
-    let nlen = len(nodes)
-    let i = 0
-    while i < nlen
-        let node = nodes[i]
+    for node in nodes
         let ntype = node.node_type
-
-        if ntype == tag_text()
-            res += node.node_val
-        elif ntype == tag_variable()
-            let lookup = context_find(stack, node.node_val)
-            if lookup.lookup_found == 1 and lookup.lookup_val != null
-                res += escape_html(str(lookup.lookup_val))
-            end
-        elif ntype == tag_raw_variable()
-            let lookup = context_find(stack, node.node_val)
-            if lookup.lookup_found == 1 and lookup.lookup_val != null
-                res += str(lookup.lookup_val)
-            end
-        elif ntype == tag_section()
-            let lookup = context_find(stack, node.node_val)
-            if lookup.lookup_found == 1
-                let val = lookup.lookup_val
-                if is_list(val) == 1
-                    let count = len(val)
-                    let j = 0
-                    while j < count
-                        let item = val[j]
-                        stack.push(item)
+        when ntype
+            is MustacheTagType.Text then
+                res += node.node_val
+            is MustacheTagType.Variable then
+                let lookup = context_find(stack, node.node_val)
+                if lookup.lookup_found == 1 and lookup.lookup_val is not null
+                    res += escape_html(str(lookup.lookup_val))
+                end
+            is MustacheTagType.RawVariable then
+                let lookup = context_find(stack, node.node_val)
+                if lookup.lookup_found == 1 and lookup.lookup_val is not null
+                    res += str(lookup.lookup_val)
+                end
+            is MustacheTagType.Section then
+                let lookup = context_find(stack, node.node_val)
+                if lookup.lookup_found == 1
+                    let val = lookup.lookup_val
+                    if is_list(val) == 1
+                        for item in val
+                            stack.push(item)
+                            res += mustache_render_nodes(node.node_children, stack, partials)
+                            stack.pop()
+                        end
+                    elif is_map_obj(val) == 1
+                        stack.push(val)
                         res += mustache_render_nodes(node.node_children, stack, partials)
                         stack.pop()
-                        j += 1
+                    elif is_truthy(val) == 1
+                        res += mustache_render_nodes(node.node_children, stack, partials)
                     end
-                elif is_map_obj(val) == 1
-                    stack.push(val)
-                    res += mustache_render_nodes(node.node_children, stack, partials)
-                    stack.pop()
-                elif is_truthy(val) == 1
-                    res += mustache_render_nodes(node.node_children, stack, partials)
                 end
-            end
-        elif ntype == tag_inverted()
-            let lookup = context_find(stack, node.node_val)
-            let should_render = 0
-            if lookup.lookup_found == 0
-                should_render = 1
-            else
-                if is_truthy(lookup.lookup_val) == 0
+            is MustacheTagType.Inverted then
+                let lookup = context_find(stack, node.node_val)
+                let should_render = 0
+                if lookup.lookup_found == 0
+                    should_render = 1
+                elif is_truthy(lookup.lookup_val) == 0
                     should_render = 1
                 end
-            end
-            if should_render == 1
-                res += mustache_render_nodes(node.node_children, stack, partials)
-            end
-        elif ntype == tag_partial()
-            if map_has_key(partials, node.node_val) == 1
-                let p_item = partials[node.node_val]
-                if is_struct_obj(p_item) == 1
-                    res += mustache_render_nodes(p_item.tmpl_nodes, stack, partials)
-                else
-                    let p_tmpl = mustache_parse(str(p_item))
-                    res += mustache_render_nodes(p_tmpl.tmpl_nodes, stack, partials)
+                if should_render == 1
+                    res += mustache_render_nodes(node.node_children, stack, partials)
                 end
-            end
+            is MustacheTagType.Partial then
+                if node.node_val in partials
+                    let p_item = partials[node.node_val]
+                    if is_struct_obj(p_item) == 1
+                        res += mustache_render_nodes(p_item.tmpl_nodes, stack, partials)
+                    else
+                        let p_tmpl = mustache_parse(str(p_item))
+                        res += mustache_render_nodes(p_tmpl.tmpl_nodes, stack, partials)
+                    end
+                end
         end
-        i += 1
     end
     return res
 end
 
 # Renders a compiled Template struct
-function mustache_render_template(template, data, partials = {})
+pub function mustache_render_template(template, data, partials = {})
     let stack = [data]
     return mustache_render_nodes(template.tmpl_nodes, stack, partials)
+end
+
+# Primary Struct Method on Template
+pub function Template.render(self, data = {}, partials = {})
+    return mustache_render_template(self, data, partials)
 end

@@ -8,23 +8,28 @@ import "./parser.alya"
 import "./renderer.alya"
 
 # Compiles a Mustache template string into an AST Template
-function compile(template_str)
+pub function compile(template_str)
     return mustache_parse(template_str)
 end
 
 # Renders a compiled Template AST with data and optional partials
-function render_template(compiled_template, data, partials = {})
+pub function render_template(compiled_template, data, partials = {})
     return mustache_render_template(compiled_template, data, partials)
 end
 
 # Renders a template string with data and optional partials
-function render(template_str, data, partials = {})
+pub function render(template_str, data, partials = {})
     let compiled = mustache_parse(template_str)
     return mustache_render_template(compiled, data, partials)
 end
 
 # Reads a template file from disk and renders it with data and optional partials
-function render_file(file_path, data, partials = {})
+pub function render_file(file_path, data, partials = {})
     let content = read_file(file_path)
     return render(content, data, partials)
+end
+
+# Factory for creating a MustacheContext
+pub function new_context(initial_scope = {})
+    return make_context(initial_scope)
 end

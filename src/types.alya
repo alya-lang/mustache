@@ -1,53 +1,24 @@
 # Mustache Template Engine - Types & Constants
 # Part of the Alya Language package ecosystem (https://github.com/alya-lang)
 
-# --- Tag Type Constants & Getters ---
-# Functions guarantee robust cross-module symbol resolution in Alya
-function tag_text()
-    return 0
+pub enum MustacheTagType
+    Text,
+    Variable,
+    RawVariable,
+    Section,
+    Inverted,
+    Partial,
+    Comment
 end
-
-function tag_variable()
-    return 1
-end
-
-function tag_raw_variable()
-    return 2
-end
-
-function tag_section()
-    return 3
-end
-
-function tag_inverted()
-    return 4
-end
-
-function tag_partial()
-    return 5
-end
-
-function tag_comment()
-    return 6
-end
-
-# Top-level fallback bindings
-let TAG_TEXT = 0
-let TAG_VARIABLE = 1
-let TAG_RAW_VARIABLE = 2
-let TAG_SECTION = 3
-let TAG_INVERTED = 4
-let TAG_PARTIAL = 5
-let TAG_COMMENT = 6
 
 # --- AST Node Definition ---
-struct Node
-    node_type
-    node_val
+pub struct Node
+    node_type,
+    node_val,
     node_children
 end
 
-function make_node(type_val, val, children = [])
+pub function make_node(type_val, val, children = [])
     return Node {
         node_type: type_val,
         node_val: val,
@@ -56,12 +27,12 @@ function make_node(type_val, val, children = [])
 end
 
 # --- Compiled Template Definition ---
-struct Template
-    tmpl_nodes
+pub struct Template
+    tmpl_nodes,
     tmpl_source
 end
 
-function make_template(nodes, source)
+pub function make_template(nodes, source)
     return Template {
         tmpl_nodes: nodes,
         tmpl_source: source
@@ -69,14 +40,19 @@ function make_template(nodes, source)
 end
 
 # --- Variable Lookup Result ---
-struct LookupResult
-    lookup_found
+pub struct LookupResult
+    lookup_found,
     lookup_val
 end
 
-function make_lookup_result(found, val)
+pub function make_lookup_result(found, val)
     return LookupResult {
         lookup_found: found,
         lookup_val: val
     }
+end
+
+# --- Context Object Struct Definition ---
+pub struct MustacheContext
+    ctx_stack
 end
