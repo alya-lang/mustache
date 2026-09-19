@@ -1,6 +1,6 @@
 [package]
 name = "mustache"
-version = "0.3.0"
+version = "0.1.0"
 alya-version = "0.0.18"
 entry = "src/lib.alya"
 description = "Fast, zero-dependency Mustache template engine for Alya"
@@ -11,8 +11,3 @@ repository = "https://github.com/alya-lang/mustache"
 keywords = ["alya", "alya-lang", "package", "mustache", "template", "html", "view", "render"]
 
 [dependencies]
-
-# [build]
-# c-sources = ["c/source.c"]
-# c-flags = ["-O2"]
-# c-include-dirs = ["c"]
