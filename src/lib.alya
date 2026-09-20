@@ -7,29 +7,44 @@ import "./context.alya"
 import "./parser.alya"
 import "./renderer.alya"
 
-# Compiles a Mustache template string into an AST Template
+## Compiles a Mustache template string into an AST Template.
 pub function compile(template_str)
     return mustache_parse(template_str)
 end
 
-# Renders a compiled Template AST with data and optional partials
+## Renders a compiled Template AST with data and optional partials.
 pub function render_template(compiled_template, data, partials = {})
     return mustache_render_template(compiled_template, data, partials)
 end
 
-# Renders a template string with data and optional partials
+## Renders a template string with data and optional partials.
 pub function render(template_str, data, partials = {})
     let compiled = mustache_parse(template_str)
     return mustache_render_template(compiled, data, partials)
 end
 
-# Reads a template file from disk and renders it with data and optional partials
+## Reads a template file from disk and renders it with data and optional partials.
 pub function render_file(file_path, data, partials = {})
     let content = read_file(file_path)
     return render(content, data, partials)
 end
 
-# Factory for creating a MustacheContext
+## Factory for creating a new MustacheContext.
 pub function new_context(initial_scope = {})
     return make_context(initial_scope)
+end
+
+## Escapes special HTML characters in a string.
+pub function escape_string(text)
+    return escape_html(text)
+end
+
+## Decodes standard HTML entities in a string.
+pub function unescape_string(text)
+    return unescape_html(text)
+end
+
+## Constructs a new AST Node for manual AST building.
+pub function new_node(type_val, val, children = [])
+    return make_node(type_val, val, children)
 end

@@ -79,6 +79,21 @@ function main()
     runner_assert_str_eq(r, res10, "File template: Engine", "render_file renders file content")
     fs_remove(tmp_file)
 
+    # 11. Template.render method
+    let res11 = compiled.render({ "name": "Method Call" })
+    runner_assert_str_eq(r, res11, "Hello, Method Call!", "Template.render method works")
+
+    # 12. Facade escape_string & unescape_string
+    let raw_str = "<b>Hello & 'World'</b>"
+    let esc_str = mustache::escape_string(raw_str)
+    runner_assert_str_eq(r, esc_str, "&lt;b&gt;Hello &amp; &#39;World&#39;&lt;/b&gt;", "escape_string works")
+    let unesc_str = mustache::unescape_string(esc_str)
+    runner_assert_str_eq(r, unesc_str, raw_str, "unescape_string works")
+
+    # 13. Facade new_node
+    let node = mustache::new_node(mustache::MustacheTagType.Text, "literal text")
+    runner_assert_str_eq(r, node.node_val, "literal text", "new_node creates valid node")
+
     let failed = runner_summary(r)
     if failed > 0
         exit(1)

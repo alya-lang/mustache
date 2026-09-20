@@ -3,7 +3,7 @@
 
 import "./types.alya"
 
-# Checks if a value is a valid heap pointer in 64-bit user address space
+## Checks if a value is a valid heap pointer in 64-bit user address space.
 pub function is_heap_pointer(v)
     if v is null or v == 0
         return 0
@@ -15,7 +15,7 @@ pub function is_heap_pointer(v)
     return 1
 end
 
-# Checks if a value is an Alya array
+## Checks if a value is an Alya list/array.
 pub function is_list(v)
     if is_heap_pointer(v) == 0
         return 0
@@ -24,7 +24,7 @@ pub function is_list(v)
     return magic == 1511063553
 end
 
-# Checks if a value is an Alya map/hash
+## Checks if a value is an Alya map/hash object.
 pub function is_map_obj(v)
     if is_heap_pointer(v) == 0
         return 0
@@ -33,9 +33,9 @@ pub function is_map_obj(v)
     return magic == 1511063554
 end
 
-# Checks if a value is truthy according to Mustache rules:
-# - null, 0, false, empty string "", empty array [] are falsy (0)
-# - everything else (including empty map or non-empty string/array/number) is truthy (1)
+## Checks if a value is truthy according to Mustache rules:
+## - null, 0, false, empty string "", empty array [] are falsy (0)
+## - everything else (including empty map or non-empty string/array/number) is truthy (1)
 pub function is_truthy(v)
     if v is null or v == 0
         return 0
@@ -57,7 +57,7 @@ pub function is_truthy(v)
     return len(s) > 0
 end
 
-# Checks if a map contains a specified key
+## Checks if a map contains a specified key.
 pub function map_has_key(m, key)
     if is_map_obj(m) == 0
         return 0
@@ -65,7 +65,7 @@ pub function map_has_key(m, key)
     return key in m
 end
 
-# Resolves a key (supports '.' for implicit iterator and dot-notation for nested paths) in a single scope
+## Resolves a key (supports '.' for implicit iterator and dot-notation for nested paths) in a single scope.
 pub function resolve_in_scope(scope, key)
     if key == "."
         return make_lookup_result(1, scope)
@@ -93,7 +93,7 @@ pub function resolve_in_scope(scope, key)
     return make_lookup_result(0, null)
 end
 
-# Searches a context stack from top (most local scope) to bottom (global scope)
+## Searches a context stack from top (most local scope) to bottom (global scope).
 pub function context_find(stack, key)
     let count = len(stack)
     if count == 0
@@ -111,20 +111,23 @@ pub function context_find(stack, key)
     return make_lookup_result(0, null)
 end
 
-# Primary Struct Methods on MustacheContext
+## Pushes a new scope onto the context stack.
 pub function MustacheContext.push(self, scope)
     self.ctx_stack.push(scope)
     return self
 end
 
+## Pops the top scope from the context stack.
 pub function MustacheContext.pop(self)
     return self.ctx_stack.pop()
 end
 
+## Searches for a key within the context stack hierarchy.
 pub function MustacheContext.find(self, key)
     return context_find(self.ctx_stack, key)
 end
 
+## Creates a new MustacheContext initialized with an optional scope map.
 pub function make_context(initial_scope = {})
     return MustacheContext {
         ctx_stack: [initial_scope]

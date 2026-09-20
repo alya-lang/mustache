@@ -15,7 +15,7 @@ function is_struct_obj(v)
     return magic == 1511063555
 end
 
-# Renders an AST node array against a context stack and partials map
+## Renders an AST node array against a context stack and partials map.
 pub function mustache_render_nodes(nodes, stack, partials)
     let res = ""
     for node in nodes
@@ -43,12 +43,14 @@ pub function mustache_render_nodes(nodes, stack, partials)
                             res += mustache_render_nodes(node.node_children, stack, partials)
                             stack.pop()
                         end
-                    elif is_map_obj(val) == 1
-                        stack.push(val)
-                        res += mustache_render_nodes(node.node_children, stack, partials)
-                        stack.pop()
-                    elif is_truthy(val) == 1
-                        res += mustache_render_nodes(node.node_children, stack, partials)
+                    else
+                        if is_map_obj(val) == 1
+                            stack.push(val)
+                            res += mustache_render_nodes(node.node_children, stack, partials)
+                            stack.pop()
+                        elif is_truthy(val) == 1
+                            res += mustache_render_nodes(node.node_children, stack, partials)
+                        end
                     end
                 end
             is MustacheTagType.Inverted then
@@ -77,13 +79,13 @@ pub function mustache_render_nodes(nodes, stack, partials)
     return res
 end
 
-# Renders a compiled Template struct
+## Renders a compiled Template struct against data and optional partials.
 pub function mustache_render_template(template, data, partials = {})
     let stack = [data]
     return mustache_render_nodes(template.tmpl_nodes, stack, partials)
 end
 
-# Primary Struct Method on Template
+## Renders this Template instance with the provided data and partials.
 pub function Template.render(self, data = {}, partials = {})
     return mustache_render_template(self, data, partials)
 end

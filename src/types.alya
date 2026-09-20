@@ -1,6 +1,7 @@
 # Mustache Template Engine - Types & Constants
 # Part of the Alya Language package ecosystem (https://github.com/alya-lang)
 
+## Enumeration of Mustache tag types.
 pub enum MustacheTagType
     Text,
     Variable,
@@ -12,12 +13,15 @@ pub enum MustacheTagType
 end
 
 # --- AST Node Definition ---
+
+## Represents an AST node in a parsed Mustache template.
 pub struct Node
     node_type,
     node_val,
     node_children
 end
 
+## Creates a new Node AST element.
 pub function make_node(type_val, val, children = [])
     return Node {
         node_type: type_val,
@@ -27,11 +31,14 @@ pub function make_node(type_val, val, children = [])
 end
 
 # --- Compiled Template Definition ---
+
+## Represents a compiled Mustache template AST.
 pub struct Template
     tmpl_nodes,
     tmpl_source
 end
 
+## Creates a new compiled Template struct from parsed AST nodes.
 pub function make_template(nodes, source)
     return Template {
         tmpl_nodes: nodes,
@@ -40,11 +47,14 @@ pub function make_template(nodes, source)
 end
 
 # --- Variable Lookup Result ---
+
+## Represents the result of a context variable lookup.
 pub struct LookupResult
     lookup_found,
     lookup_val
 end
 
+## Creates a new LookupResult struct.
 pub function make_lookup_result(found, val)
     return LookupResult {
         lookup_found: found,
@@ -53,6 +63,8 @@ pub function make_lookup_result(found, val)
 end
 
 # --- Context Object Struct Definition ---
+
+## Context stack container used during template rendering.
 pub struct MustacheContext
     ctx_stack
 end

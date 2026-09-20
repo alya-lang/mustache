@@ -20,7 +20,7 @@ function mustache_find_sub(s, sub, start_pos, slen)
     return -1
 end
 
-# Parses a Mustache template string into a Template AST
+## Parses a Mustache template string into a compiled Template AST.
 pub function mustache_parse(source)
     let slen = len(source)
     let root = make_node(MustacheTagType.Section, "root", [])
