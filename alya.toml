@@ -11,3 +11,7 @@ repository = "https://github.com/alya-lang/mustache"
 keywords = ["alya", "alya-lang", "package", "mustache", "template", "html", "view", "render"]
 
 [dependencies]
+
+# [lint]
+# disabled_rules = []
+# exclude = []
