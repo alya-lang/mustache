@@ -1,4 +1,6 @@
-# Example usage of mustache template engine
+## Demo of the mustache template engine
+## Part of the Alya Language package ecosystem (https://github.com/alya-lang)
+
 import "../src/lib.alya" as mustache
 
 function main()

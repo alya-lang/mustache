@@ -1,4 +1,6 @@
-# Benchmark suite for mustache template engine
+## Benchmark suite for the mustache package
+## Part of the Alya Language package ecosystem (https://github.com/alya-lang)
+
 import "std/bench"
 import "../src/lib.alya" as mustache
 import "../src/escape.alya" as escape

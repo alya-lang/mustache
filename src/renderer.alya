@@ -1,13 +1,18 @@
-# Mustache Template Engine - AST Renderer
-# Part of the Alya Language package ecosystem (https://github.com/alya-lang)
+## # mustache/renderer
+##
+## Mustache template engine AST renderer.
+## Part of the Alya Language package ecosystem (https://github.com/alya-lang).
+##
+## Walks variables, sections, inverted blocks, and partials against a
+## context stack with HTML escaping for interpolated values.
 
 import "./types.alya"
 import "./escape.alya"
 import "./context.alya"
 import "./parser.alya"
 
-# Checks if a value is a struct (like precompiled Template)
-function is_struct_obj(v)
+# Checks if a value is a struct (like a precompiled Template).
+function is_struct_obj(v) -> int
     if is_heap_pointer(v) == 0
         return 0
     end
@@ -16,7 +21,15 @@ function is_struct_obj(v)
 end
 
 ## Renders an AST node array against a context stack and partials map.
-pub function mustache_render_nodes(nodes, stack, partials)
+##
+## ### Parameters
+## - `nodes`: AST node array.
+## - `stack`: Scope stack array (mutated during section iteration).
+## - `partials`: Named partial template map.
+##
+## ### Returns
+## The rendered output string.
+pub function mustache_render_nodes(nodes: array, stack: array, partials) -> string
     let res = ""
     for node in nodes
         let ntype = node.node_type
@@ -26,7 +39,8 @@ pub function mustache_render_nodes(nodes, stack, partials)
             is MustacheTagType.Variable then
                 let lookup = context_find(stack, node.node_val)
                 if lookup.lookup_found == 1 and lookup.lookup_val is not null
-                    res += escape_html(str(lookup.lookup_val))
+                    let esc_val = escape_html(str(lookup.lookup_val))
+                    res += esc_val
                 end
             is MustacheTagType.RawVariable then
                 let lookup = context_find(stack, node.node_val)
@@ -80,12 +94,28 @@ pub function mustache_render_nodes(nodes, stack, partials)
 end
 
 ## Renders a compiled Template struct against data and optional partials.
-pub function mustache_render_template(template, data, partials = {})
+##
+## ### Parameters
+## - `template`: Compiled `Template` instance.
+## - `data`: Root scope value.
+## - `partials`: Named partial template map. Defaults to `{}`.
+##
+## ### Returns
+## The rendered output string.
+pub function mustache_render_template(template: Template, data, partials = {}) -> string
     let stack = [data]
     return mustache_render_nodes(template.tmpl_nodes, stack, partials)
 end
 
 ## Renders this Template instance with the provided data and partials.
-pub function Template.render(self, data = {}, partials = {})
+##
+## ### Parameters
+## - `self`: The target `Template` instance.
+## - `data`: Root scope value. Defaults to `{}`.
+## - `partials`: Named partial template map. Defaults to `{}`.
+##
+## ### Returns
+## The rendered output string.
+pub function Template.render(self: Template, data = {}, partials = {}) -> string
     return mustache_render_template(self, data, partials)
 end

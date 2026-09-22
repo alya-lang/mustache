@@ -1,8 +1,19 @@
-# Mustache Template Engine - HTML Escaping & Sanitization
-# Part of the Alya Language package ecosystem (https://github.com/alya-lang)
+## # mustache/escape
+##
+## Mustache template engine HTML escaping and sanitization.
+## Part of the Alya Language package ecosystem (https://github.com/alya-lang).
 
-## Escapes special HTML characters (&, <, >, ", ') into standard safe HTML entities.
-pub function escape_html(text)
+## Escapes special HTML characters into safe entities.
+##
+## Maps `&`, `<`, `>`, `"`, and `'` to `&amp;`, `&lt;`, `&gt;`,
+## `&quot;`, and `&#39;`.
+##
+## ### Parameters
+## - `text`: Input value coerced to a string.
+##
+## ### Returns
+## The escaped string.
+pub function escape_html(text) -> string
     let s = str(text)
     let slen = len(s)
     if slen == 0
@@ -25,8 +36,14 @@ pub function escape_html(text)
     return res
 end
 
-## Decodes standard HTML entities (&amp;, &lt;, &gt;, &quot;, &#39;) back to raw characters.
-pub function unescape_html(text)
+## Decodes standard HTML entities back to raw characters.
+##
+## ### Parameters
+## - `text`: Input value coerced to a string.
+##
+## ### Returns
+## The decoded string.
+pub function unescape_html(text) -> string
     let s = str(text)
     let slen = len(s)
     if slen == 0

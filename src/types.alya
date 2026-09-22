@@ -1,28 +1,48 @@
-# Mustache Template Engine - Types & Constants
-# Part of the Alya Language package ecosystem (https://github.com/alya-lang)
+## # mustache/types
+##
+## Mustache template engine types and constants.
+## Part of the Alya Language package ecosystem (https://github.com/alya-lang).
+##
+## Defines tag discriminators, AST nodes, compiled templates, lookup
+## results, and the render context stack container.
 
 ## Enumeration of Mustache tag types.
 pub enum MustacheTagType
-    Text,
-    Variable,
-    RawVariable,
-    Section,
-    Inverted,
-    Partial,
-    Comment
+    Text = 0,
+    Variable = 1,
+    RawVariable = 2,
+    Section = 3,
+    Inverted = 4,
+    Partial = 5,
+    Comment = 6
 end
 
-# --- AST Node Definition ---
+# ───────────────────────────────────────────────────────────────
+# AST Node Definition
+# ───────────────────────────────────────────────────────────────
 
-## Represents an AST node in a parsed Mustache template.
+## An AST node in a parsed Mustache template.
+##
+## ### Fields
+## - `node_type`: `MustacheTagType` discriminator value.
+## - `node_val`: Tag payload string (name, text, or raw content).
+## - `node_children`: Child node array for sections.
 pub struct Node
-    node_type,
-    node_val,
-    node_children
+    node_type: int,
+    node_val: string,
+    node_children: array
 end
 
 ## Creates a new Node AST element.
-pub function make_node(type_val, val, children = [])
+##
+## ### Parameters
+## - `type_val`: `MustacheTagType` discriminator value.
+## - `val`: Tag payload string.
+## - `children`: Child node array. Defaults to `[]`.
+##
+## ### Returns
+## The new `Node` instance.
+pub function make_node(type_val: int, val: string, children: array = []) -> Node
     return Node {
         node_type: type_val,
         node_val: val,
@@ -30,41 +50,72 @@ pub function make_node(type_val, val, children = [])
     }
 end
 
-# --- Compiled Template Definition ---
+# ───────────────────────────────────────────────────────────────
+# Compiled Template Definition
+# ───────────────────────────────────────────────────────────────
 
-## Represents a compiled Mustache template AST.
+## A compiled Mustache template AST.
+##
+## ### Fields
+## - `tmpl_nodes`: Root AST node array.
+## - `tmpl_source`: Original template source string.
 pub struct Template
-    tmpl_nodes,
-    tmpl_source
+    tmpl_nodes: array,
+    tmpl_source: string
 end
 
 ## Creates a new compiled Template struct from parsed AST nodes.
-pub function make_template(nodes, source)
+##
+## ### Parameters
+## - `nodes`: Root AST node array.
+## - `source`: Original template source string.
+##
+## ### Returns
+## The new `Template` instance.
+pub function make_template(nodes: array, source: string) -> Template
     return Template {
         tmpl_nodes: nodes,
         tmpl_source: source
     }
 end
 
-# --- Variable Lookup Result ---
+# ───────────────────────────────────────────────────────────────
+# Variable Lookup Result
+# ───────────────────────────────────────────────────────────────
 
-## Represents the result of a context variable lookup.
+## The result of a context variable lookup.
+##
+## ### Fields
+## - `lookup_found`: `1` when the key resolved, `0` otherwise.
+## - `lookup_val`: Resolved value (or null when missing).
 pub struct LookupResult
-    lookup_found,
+    lookup_found: int,
     lookup_val
 end
 
 ## Creates a new LookupResult struct.
-pub function make_lookup_result(found, val)
+##
+## ### Parameters
+## - `found`: `1` when the key resolved, `0` otherwise.
+## - `val`: Resolved value.
+##
+## ### Returns
+## The new `LookupResult` instance.
+pub function make_lookup_result(found: int, val) -> LookupResult
     return LookupResult {
         lookup_found: found,
         lookup_val: val
     }
 end
 
-# --- Context Object Struct Definition ---
+# ───────────────────────────────────────────────────────────────
+# Context Object Struct Definition
+# ───────────────────────────────────────────────────────────────
 
 ## Context stack container used during template rendering.
+##
+## ### Fields
+## - `ctx_stack`: Scope array from global (bottom) to local (top).
 pub struct MustacheContext
-    ctx_stack
+    ctx_stack: array
 end

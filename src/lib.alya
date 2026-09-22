@@ -1,5 +1,10 @@
-# Mustache Template Engine - Public API Facade
-# Part of the Alya Language package ecosystem (https://github.com/alya-lang)
+## # mustache
+##
+## Mustache template engine public API facade.
+## Part of the Alya Language package ecosystem (https://github.com/alya-lang).
+##
+## Compiles logic-less templates into ASTs and renders them against data
+## scopes with sections, partials, and HTML escaping.
 
 import "./types.alya"
 import "./escape.alya"
@@ -8,43 +13,109 @@ import "./parser.alya"
 import "./renderer.alya"
 
 ## Compiles a Mustache template string into an AST Template.
-pub function compile(template_str)
+##
+## ### Parameters
+## - `template_str`: Template source string.
+##
+## ### Returns
+## The compiled `Template` instance.
+##
+## ### Examples
+## ```alya
+## let t = compile("Hello, {{name}}!")
+## ```
+pub function compile(template_str: string) -> Template
     return mustache_parse(template_str)
 end
 
 ## Renders a compiled Template AST with data and optional partials.
-pub function render_template(compiled_template, data, partials = {})
+##
+## ### Parameters
+## - `compiled_template`: Compiled `Template` instance.
+## - `data`: Root scope value.
+## - `partials`: Named partial template map. Defaults to `{}`.
+##
+## ### Returns
+## The rendered output string.
+pub function render_template(compiled_template: Template, data, partials = {}) -> string
     return mustache_render_template(compiled_template, data, partials)
 end
 
 ## Renders a template string with data and optional partials.
-pub function render(template_str, data, partials = {})
+##
+## ### Parameters
+## - `template_str`: Template source string.
+## - `data`: Root scope value.
+## - `partials`: Named partial template map. Defaults to `{}`.
+##
+## ### Returns
+## The rendered output string.
+##
+## ### Examples
+## ```alya
+## say render("Hello, {{name}}!", { "name": "Alya" })
+## ```
+pub function render(template_str: string, data, partials = {}) -> string
     let compiled = mustache_parse(template_str)
     return mustache_render_template(compiled, data, partials)
 end
 
-## Reads a template file from disk and renders it with data and optional partials.
-pub function render_file(file_path, data, partials = {})
+## Reads a template file from disk and renders it with data and partials.
+##
+## ### Parameters
+## - `file_path`: Template file path string.
+## - `data`: Root scope value.
+## - `partials`: Named partial template map. Defaults to `{}`.
+##
+## ### Returns
+## The rendered output string.
+pub function render_file(file_path: string, data, partials = {}) -> string
     let content = read_file(file_path)
     return render(content, data, partials)
 end
 
 ## Factory for creating a new MustacheContext.
-pub function new_context(initial_scope = {})
+##
+## ### Parameters
+## - `initial_scope`: Initial scope value. Defaults to `{}`.
+##
+## ### Returns
+## The new `MustacheContext` instance.
+pub function new_context(initial_scope = {}) -> MustacheContext
     return make_context(initial_scope)
 end
 
 ## Escapes special HTML characters in a string.
-pub function escape_string(text)
+##
+## ### Parameters
+## - `text`: Input value.
+##
+## ### Returns
+## The escaped string.
+pub function escape_string(text) -> string
     return escape_html(text)
 end
 
 ## Decodes standard HTML entities in a string.
-pub function unescape_string(text)
+##
+## ### Parameters
+## - `text`: Input value.
+##
+## ### Returns
+## The decoded string.
+pub function unescape_string(text) -> string
     return unescape_html(text)
 end
 
 ## Constructs a new AST Node for manual AST building.
-pub function new_node(type_val, val, children = [])
+##
+## ### Parameters
+## - `type_val`: `MustacheTagType` discriminator value.
+## - `val`: Tag payload string.
+## - `children`: Child node array. Defaults to `[]`.
+##
+## ### Returns
+## The new `Node` instance.
+pub function new_node(type_val: int, val: string, children: array = []) -> Node
     return make_node(type_val, val, children)
 end
