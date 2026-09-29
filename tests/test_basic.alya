@@ -73,11 +73,17 @@ function main()
     runner_assert_str_eq(r, res9, "Hello, Alya Ecosystem!", "Precompiled template renders correctly")
 
     # 10. Render from file
+    @cfg(feature = "io")
     let tmp_file = "test_temp_template.mustache"
+    @cfg(feature = "io")
     let t_file_content = "File template: " + ot + "title" + ct
+    @cfg(feature = "io")
     fs_write(tmp_file, t_file_content)
+    @cfg(feature = "io")
     let res10 = mustache::render_file(tmp_file, { "title": "Engine" })
+    @cfg(feature = "io")
     runner_assert_str_eq(r, res10, "File template: Engine", "render_file renders file content")
+    @cfg(feature = "io")
     fs_remove(tmp_file)
 
     # 11. Template.render method

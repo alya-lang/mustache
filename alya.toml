@@ -12,6 +12,10 @@ keywords = ["alya", "alya-lang", "package", "mustache", "template", "html", "vie
 
 [dependencies]
 
+[features]
+default = ["io"]
+io = []
+
 # [lint]
 # disabled_rules = []
 # exclude = []

@@ -69,6 +69,9 @@ end
 ##
 ## ### Returns
 ## The rendered output string.
+##
+## Requires the `io` feature (default-on).
+@cfg(feature = "io")
 pub function render_file(file_path: string, data, partials = {}) -> string
     let content = read_file(file_path)
     return render(content, data, partials)

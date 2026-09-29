@@ -63,6 +63,22 @@ alya add mustache --git https://github.com/alya-lang/mustache --branch main
 alya install
 ```
 
+### Package Features
+
+| Feature | Default | Description |
+|:---|:---:|:---|
+| `io` | ✅ | File template rendering (`render_file`). Without it only in-memory `render`/`compile` remain. |
+
+```bash
+# Full build (default)
+alya install
+alya test
+
+# Slim build without file rendering
+alya install --no-default-features
+alya test --no-default-features
+```
+
 ---
 
 ## 🚀 Quick Start
