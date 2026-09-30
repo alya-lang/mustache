@@ -1,6 +1,6 @@
 [package]
 name = "mustache"
-version = "0.2.0"
+version = "0.1.0"
 alya-version = "0.0.19"
 entry = "src/lib.alya"
 description = "Fast, zero-dependency Mustache template engine for Alya"
@@ -11,10 +11,6 @@ repository = "https://github.com/alya-lang/mustache"
 keywords = ["alya", "alya-lang", "package", "mustache", "template", "html", "view", "render"]
 
 [dependencies]
-
-[features]
-default = ["io"]
-io = []
 
 # [lint]
 # disabled_rules = []
@@ -28,3 +24,7 @@ io = []
 
 # [bench]
 # exclude = []
+
+[features]
+default = ["io"]
+io = []
