@@ -16,13 +16,13 @@ import "./types.alya"
 ## `1` for plausible heap addresses, `0` otherwise.
 pub function is_heap_pointer(v) -> int
     if v is null or v == 0
-        return 0
+        return false
     end
     # Range check for 64-bit user pointers: [65536, 0x00007fffffffffff]
     if v < 65536 or v > 140737488355327
-        return 0
+        return false
     end
-    return 1
+    return true
 end
 
 ## Checks whether a value is an Alya list/array.
@@ -33,8 +33,8 @@ end
 ## ### Returns
 ## `1` for lists, `0` otherwise.
 pub function is_list(v) -> int
-    if is_heap_pointer(v) == 0
-        return 0
+    if is_heap_pointer(v) == false
+        return false
     end
     let magic = peek_int(v, -16)
     return magic == 1511063553
@@ -48,8 +48,8 @@ end
 ## ### Returns
 ## `1` for maps, `0` otherwise.
 pub function is_map_obj(v) -> int
-    if is_heap_pointer(v) == 0
-        return 0
+    if is_heap_pointer(v) == false
+        return false
     end
     let magic = peek_int(v, -16)
     return magic == 1511063554
@@ -67,19 +67,19 @@ end
 ## `1` for truthy values, `0` otherwise.
 pub function is_truthy(v) -> int
     if v is null or v == 0
-        return 0
+        return false
     end
     if is_list(v)
         return len(v) > 0
     end
-    if is_heap_pointer(v) == 0
+    if is_heap_pointer(v) == false
         # Non-zero scalar number or boolean true
-        return 1
+        return true
     end
     let magic = peek_int(v, -16)
     if magic == 1511063554
         # Maps are always truthy in Mustache
-        return 1
+        return true
     end
     # Check string length
     let s = str(v)
@@ -95,8 +95,8 @@ end
 ## ### Returns
 ## `1` when the key exists, `0` otherwise.
 pub function map_has_key(m, key: string) -> int
-    if is_map_obj(m) == 0
-        return 0
+    if is_map_obj(m) == false
+        return false
     end
     return key in m
 end
@@ -113,29 +113,29 @@ end
 ## The `LookupResult` instance.
 pub function resolve_in_scope(scope, key: string) -> LookupResult
     if key == "."
-        return make_lookup_result(1, scope)
+        return make_lookup_result(true, scope)
     end
-    if is_map_obj(scope) == 0
-        return make_lookup_result(0, null)
+    if is_map_obj(scope) == false
+        return make_lookup_result(false, null)
     end
     if key.contains(".")
         let parts = key.split(".")
         let cur = scope
         for part in parts
-            if is_map_obj(cur) == 0
-                return make_lookup_result(0, null)
+            if is_map_obj(cur) == false
+                return make_lookup_result(false, null)
             end
             if part not in cur
-                return make_lookup_result(0, null)
+                return make_lookup_result(false, null)
             end
             cur = cur[part]
         end
-        return make_lookup_result(1, cur)
+        return make_lookup_result(true, cur)
     end
     if key in scope
-        return make_lookup_result(1, scope[key])
+        return make_lookup_result(true, scope[key])
     end
-    return make_lookup_result(0, null)
+    return make_lookup_result(false, null)
 end
 
 ## Searches a context stack from top (local) to bottom (global).
@@ -149,18 +149,18 @@ end
 pub function context_find(stack: array, key: string) -> LookupResult
     let count = len(stack)
     if count == 0
-        return make_lookup_result(0, null)
+        return make_lookup_result(false, null)
     end
     let i = count - 1
     while i >= 0
         let scope = stack[i]
         let res = resolve_in_scope(scope, key)
-        if res.lookup_found == 1
+        if res.lookup_found == true
             return res
         end
         i -= 1
     end
-    return make_lookup_result(0, null)
+    return make_lookup_result(false, null)
 end
 
 ## Pushes a new scope onto the context stack.

@@ -13,8 +13,8 @@ import "./parser.alya"
 
 # Checks if a value is a struct (like a precompiled Template).
 function is_struct_obj(v) -> int
-    if is_heap_pointer(v) == 0
-        return 0
+    if is_heap_pointer(v) == false
+        return false
     end
     let magic = peek_int(v, -16)
     return magic == 1511063555
@@ -38,50 +38,50 @@ pub function mustache_render_nodes(nodes: array, stack: array, partials) -> stri
                 res += node.node_val
             is MustacheTagType.Variable then
                 let lookup = context_find(stack, node.node_val)
-                if lookup.lookup_found == 1 and lookup.lookup_val is not null
+                if lookup.lookup_found == true and lookup.lookup_val is not null
                     let esc_val = escape_html(str(lookup.lookup_val))
                     res += esc_val
                 end
             is MustacheTagType.RawVariable then
                 let lookup = context_find(stack, node.node_val)
-                if lookup.lookup_found == 1 and lookup.lookup_val is not null
+                if lookup.lookup_found == true and lookup.lookup_val is not null
                     res += str(lookup.lookup_val)
                 end
             is MustacheTagType.Section then
                 let lookup = context_find(stack, node.node_val)
-                if lookup.lookup_found == 1
+                if lookup.lookup_found == true
                     let val = lookup.lookup_val
-                    if is_list(val) == 1
+                    if is_list(val) == true
                         for item in val
                             stack.push(item)
                             res += mustache_render_nodes(node.node_children, stack, partials)
                             stack.pop()
                         end
                     else
-                        if is_map_obj(val) == 1
+                        if is_map_obj(val) == true
                             stack.push(val)
                             res += mustache_render_nodes(node.node_children, stack, partials)
                             stack.pop()
-                        elif is_truthy(val) == 1
+                        elif is_truthy(val) == true
                             res += mustache_render_nodes(node.node_children, stack, partials)
                         end
                     end
                 end
             is MustacheTagType.Inverted then
                 let lookup = context_find(stack, node.node_val)
-                let should_render = 0
-                if lookup.lookup_found == 0
-                    should_render = 1
-                elif is_truthy(lookup.lookup_val) == 0
-                    should_render = 1
+                let should_render = false
+                if lookup.lookup_found == false
+                    should_render = true
+                elif is_truthy(lookup.lookup_val) == false
+                    should_render = true
                 end
-                if should_render == 1
+                if should_render == true
                     res += mustache_render_nodes(node.node_children, stack, partials)
                 end
             is MustacheTagType.Partial then
                 if node.node_val in partials
                     let p_item = partials[node.node_val]
-                    if is_struct_obj(p_item) == 1
+                    if is_struct_obj(p_item) == true
                         res += mustache_render_nodes(p_item.tmpl_nodes, stack, partials)
                     else
                         let p_tmpl = mustache_parse(str(p_item))
