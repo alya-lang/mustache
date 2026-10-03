@@ -14,7 +14,7 @@ import "./types.alya"
 ##
 ## ### Returns
 ## `1` for plausible heap addresses, `0` otherwise.
-pub function is_heap_pointer(v) -> int
+pub function is_heap_pointer(v) -> bool
     if v is null or v == 0
         return false
     end
@@ -32,7 +32,7 @@ end
 ##
 ## ### Returns
 ## `1` for lists, `0` otherwise.
-pub function is_list(v) -> int
+pub function is_list(v) -> bool
     if is_heap_pointer(v) == false
         return false
     end
@@ -47,7 +47,7 @@ end
 ##
 ## ### Returns
 ## `1` for maps, `0` otherwise.
-pub function is_map_obj(v) -> int
+pub function is_map_obj(v) -> bool
     if is_heap_pointer(v) == false
         return false
     end
@@ -65,7 +65,7 @@ end
 ##
 ## ### Returns
 ## `1` for truthy values, `0` otherwise.
-pub function is_truthy(v) -> int
+pub function is_truthy(v) -> bool
     if v is null or v == 0
         return false
     end
